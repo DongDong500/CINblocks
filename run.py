@@ -7,8 +7,12 @@ import numpy as np
 from main import get_argparser, run
 from utils.utils import email, utils
 
+
+
+
 def avg_rst(obj):
-    """Return
+    """average results
+    Return
     {
         "Dice score" : {
             "mean" : np.array(result[key]).mean(),
@@ -25,8 +29,8 @@ def avg_rst(obj):
         "Precision" : [],
         "Recall" : [],
         "Specificity" : [],
-        "Dice score" : [],
-        "IoU" : []
+        "IoU" : [],
+        "Dice score" : []
     }
     rsts = {}
     
@@ -80,21 +84,15 @@ def _run(arg, flag = 0) -> dict:
 
         Rsts = ""
         for k, v in result.items():
-            Rsts += f"{k}: {v['mean']:.6f}±{v['std']:.6f}\n"
+            Rsts += f"{k}: \n{v['mean']:.4f}\n±{v['std']:.4f}\n"
 
         Tts = ""
         if args.dataset == "BUSI_with_GT":
             dataset_str = f"Dataset: BUSI_with_GT/"
-            Tts = f"train with {args.category}, test with {args.testset}"
-        elif args.dataset == "Peroneal":
-            dataset_str = f"Dataset: Peroneal/"
-            Tts = f"train with {args.dataset}, test with {args.testset}"
-        elif args.dataset == "Median":
-            dataset_str = f"Dataset: Median/"
-            Tts = f"train with {args.dataset}, test with {args.testset}"
+            Tts = f"train with {args.trainset['BUSI_with_GT']['category']}, test with {args.testset['BUSI_with_GT']['category']}"
         elif args.dataset == "Allnerve":
             dataset_str = f"Dataset: Allnerve/"
-            Tts = f"train with {args.dataset}, test with {args.testset}"
+            Tts = f"train with {args.trainset}, test with {args.testset}"
         else:
             raise Exception
 
@@ -136,11 +134,44 @@ if __name__ == "__main__":
         # 총 6 + 12 개의 실험.
         
         mode = {
-            "pp" :{
+            "as-a" : {
                 "model" : [
-                    '_unet3plus_cin',
-                    '_unet2plus_cin',
-                    '_unet_cin'
+                    '_unet_cin_slim'
+                ],
+                "itr" : {
+                    "shortmemo" : [
+                        '(CIN) with cin-affine BUSI / Rsz256-ElyStpLoss / benign + malignant',
+                        '(CIN) with cin-affine BUSI / Rsz256-ElyStpLoss / benign + malignant + normal'
+                    ],
+                    "trainset" : [
+                        {
+                            'BUSI_with_GT' : {
+                                'category' : ['benign', 'malignant']
+                            }
+                        },
+                        {
+                            'BUSI_with_GT' : {
+                                'category' : ['benign', 'malignant', 'normal']
+                            }
+                        },
+                    ],
+                    "testset" : [
+                        {
+                            'BUSI_with_GT' : {
+                                'category' : ['benign', 'malignant']
+                            }
+                        },
+                        {
+                            'BUSI_with_GT' : {
+                                'category' : ['benign', 'malignant', 'normal']
+                            }
+                        },
+                    ]
+                }
+            },
+            "as-b" : {
+                "model" : [
+                    '_unet_cin_slim'
                 ],
                 "itr" : {
                     "shortmemo" : [
@@ -173,18 +204,16 @@ if __name__ == "__main__":
                     ]
                 }
             },
-            "base" : {
+            "pp" :{
                 "model" : [
-                    '_unet3plus',
-                    '_unet2plus',
-                    '_unet'
+                    '_unet3plus_cin',
+                    '_unet2plus_cin',
+                    '_unet_cin',
                 ],
                 "itr" : {
                     "shortmemo" : [
-                        '(base) BUSI / Rsz256-ElyStpLoss / benign + malignant',
-                        '(base) BUSI / Rsz256-ElyStpLoss / benign + malignant + normal',
-                        '(base) BUSI / Rsz256-ElyStpLoss / malignant only',
-                        '(base) BUSI / Rsz256-ElyStpLoss / benign only'
+                        '(CIN) without cin-affine BUSI / Rsz256-ElyStpLoss / benign + malignant',
+                        '(CIN) without cin-affine BUSI / Rsz256-ElyStpLoss / benign + malignant + normal'
                     ],
                     "trainset" : [
                         {
@@ -195,16 +224,6 @@ if __name__ == "__main__":
                         {
                             'BUSI_with_GT' : {
                                 'category' : ['benign', 'malignant', 'normal']
-                            }
-                        },
-                        {
-                            'BUSI_with_GT' : {
-                                'category' : ['malignant']
-                            }
-                        },
-                        {
-                            'BUSI_with_GT' : {
-                                'category' : ['benign']
                             }
                         },
                     ],
@@ -219,23 +238,18 @@ if __name__ == "__main__":
                                 'category' : ['benign', 'malignant', 'normal']
                             }
                         },
-                        {
-                            'BUSI_with_GT' : {
-                                'category' : ['malignant']
-                            }
-                        },
-                        {
-                            'BUSI_with_GT' : {
-                                'category' : ['benign']
-                            }
-                        },
                     ]
                 }
-            },
+            }
         }
 
         ### ------------------- ###
         for key, _ in mode.items():
+            
+            if key == 'as-a':
+                args.CIN_affine = True
+            else:
+                args.CIN_affine = False
 
             model = mode[key]['model']
 
@@ -248,7 +262,7 @@ if __name__ == "__main__":
                 for srtm, ctgy, tset in zip(shortmemo, category, testset):
                     flag += 1
                     args.short_memo = srtm
-                    args.category = ctgy
+                    args.trainset = ctgy
                     args.testset = tset
 
                     current_working_dir = os.path.dirname(os.path.abspath(__file__))

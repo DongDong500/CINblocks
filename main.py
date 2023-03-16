@@ -25,7 +25,7 @@ from utils.datasets import dataloader
 
 
 
-def _logging(args, writer, phase, epoch, score, loss,):
+def _logging(args, writer, phase, epoch, score, loss, verbose = False):
     """Write tensorboardX.SummaryWriter and print results.
     """
     writer.add_scalar(f'IoU BG/{phase}', score['Class IoU'][0], epoch)
@@ -40,10 +40,11 @@ def _logging(args, writer, phase, epoch, score, loss,):
     writer.add_scalar(f'Specificity Nerve/{phase}', score['Class Specificity'][1], epoch)
     writer.add_scalar(f'epoch loss/{phase}', loss, epoch)
 
-    print("[{}] Epoch: {}/{} Loss: {:.5f}".format(phase, epoch, args.total_itrs, loss))
-    print("\tDice [0]: {:.5f} [1]: {:.5f}".format(score['Class Dice'][0], score['Class Dice'][1]))
-    print("\tIoU [0]: {:.5f} [1]: {:.5f}".format(score['Class IoU'][0], score['Class IoU'][1]))
-    print("\tPrecision: {:.2f}, Recall: {:.2f}, Specificity: {:.2f}".format(score['Class Precision'][1], score['Class Recall'][1], score['Class Specificity'][1]))
+    if verbose:
+        print("[{}] Epoch: {}/{} Loss: {:.5f}".format(phase, epoch, args.total_itrs, loss))
+        print("\tDice [0]: {:.5f} [1]: {:.5f}".format(score['Class Dice'][0], score['Class Dice'][1]))
+        print("\tIoU [0]: {:.5f} [1]: {:.5f}".format(score['Class IoU'][0], score['Class IoU'][1]))
+        print("\tPrecision: {:.2f}, Recall: {:.2f}, Specificity: {:.2f}".format(score['Class Precision'][1], score['Class Recall'][1], score['Class Specificity'][1]))
 
 def get_argparser():
     parser = argparse.ArgumentParser()
@@ -86,8 +87,8 @@ def get_argparser():
                         help="")
     parser.add_argument("--dataset", choices=["BUSI_with_GT", "Allnerve"], default="BUSI_with_GT",
                         help="")
-    parser.add_argument("--kfold", type=int, default=5,
-                        help="kfold (default: 5)")
+    parser.add_argument("--kfold", type=int, default=4,
+                        help="kfold (default: 4)")
     parser.add_argument("--k", type=int, default=0, 
                         help="i-th fold set of kfold data (default: 0)")
     parser.add_argument("--resize", nargs='+', default=[224, 224],
@@ -153,6 +154,8 @@ def get_argparser():
                         help="Random seed (default: 1)")
     parser.add_argument("--total_itrs", type=int, default=200,
                         help="Total iteration epoch number (default: 0.2k)")
+    parser.add_argument("--verbose", action='store_true',
+                        help="")
     
 
     # Criterion option
@@ -253,7 +256,7 @@ def run(args, RUN, FOLD) -> dict:
     early_stop = earlystop.EarlyStopping(
         patience=args.patience,
         delta=args.delta, 
-        verbose=True, 
+        verbose=args.verbose, 
         path=os.path.join(
             args.folder,
             "best-param",
@@ -324,7 +327,8 @@ def run(args, RUN, FOLD) -> dict:
             phase="train",
             epoch=epoch,
             score=score,
-            loss=epoch_loss
+            loss=epoch_loss,
+            verbose=args.verbose
         )
 
 
@@ -371,7 +375,8 @@ def run(args, RUN, FOLD) -> dict:
             phase="val",
             epoch=epoch,
             score=score,
-            loss=epoch_loss
+            loss=epoch_loss,
+            verbose=args.verbose
         )
 
         #print("Epoch loss", epoch_loss)
@@ -401,13 +406,13 @@ def run(args, RUN, FOLD) -> dict:
             "background" : bscore['Class Specificity'][0],
             "RoI" : bscore['Class Specificity'][1]
         },
-        "Dice score" : {
-            "background" : bscore['Class Dice'][0],
-            "RoI" : bscore['Class Dice'][1]
-        },
         "IoU" : {
             "background" : bscore['Class IoU'][0],
             "RoI" : bscore['Class IoU'][1]
+        },
+        "Dice score" : {
+            "background" : bscore['Class Dice'][0],
+            "RoI" : bscore['Class Dice'][1]
         },
         "time elapsed" : str(datetime.datetime.now() - start_time)
     }

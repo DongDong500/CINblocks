@@ -41,6 +41,10 @@ PERONEAL = {
     "FN+5" : 16
 }
 
+ULNAR = {
+    "data" : 1234
+}
+
 C = {
     "peroneal" : {
         "FH" : 0,
@@ -53,6 +57,9 @@ C = {
     "median" : {
         "wrist" : 6,
         "forearm" : 7
+    },
+    "ulnar" : {
+        "data" : 6
     }
 }
 
@@ -101,6 +108,10 @@ class Allnerve(data.Dataset):
                         'region' : ['FH', 'FN', 'FN+1', 'FN+2', 'FN+3', 'FN+4'],
                         'modality' : ['UN']
                     },
+                    'ulnar' : {
+                        'region' : ['data'],
+                        'modality' : ['NotDefined']
+                    }
                 },
                 testset: dict = {
                     'median' : {
@@ -110,6 +121,10 @@ class Allnerve(data.Dataset):
                     'peroneal' : {
                         'region' : ['FH', 'FN', 'FN+1', 'FN+2', 'FN+3', 'FN+4'],
                         'modality' : ['UN']
+                    },
+                    'ulnar' : {
+                        'region' : ['data'],
+                        'modality' : ['NotDefined']
                     }
                 },
 
@@ -171,23 +186,39 @@ class Allnerve(data.Dataset):
         for d, v in self.ds.items():
             for r in v['region']:
                 for m in v['modality']:
-
-                    self.image_dir = os.path.join(
-                        dataset_pth_prefix, 
-                        d, 
-                        r, 
-                        m
-                    )
-                    self.split_file = os.path.join(
-                        dataset_pth_prefix, 
-                        d, 
-                        'splits', 
-                        r, 
-                        m, 
-                        fold, 
-                        self.image_set + '.txt'
-                    )
-
+                    
+                    if d == 'peroneal' or d == 'median':
+                        self.image_dir = os.path.join(
+                            dataset_pth_prefix, 
+                            d, 
+                            r, 
+                            m
+                        )
+                        self.split_file = os.path.join(
+                            dataset_pth_prefix, 
+                            d, 
+                            'splits', 
+                            r, 
+                            m, 
+                            fold, 
+                            self.image_set + '.txt'
+                        )
+                    elif d == 'ulnar':
+                        self.image_dir = os.path.join(
+                            dataset_pth_prefix, 
+                            d, 
+                            r, 
+                        )
+                        self.split_file = os.path.join(
+                            dataset_pth_prefix, 
+                            d,
+                            'splits',
+                            fold,
+                            self.image_set + '.txt'
+                        )
+                    else:
+                        raise Exception
+                    
                     if not os.path.exists(self.image_dir):
                         raise Exception(
                             'Dataset path is not found or corrupted. Image path:', self.image_dir
@@ -200,54 +231,78 @@ class Allnerve(data.Dataset):
                     with open(os.path.join(self.split_file), "r") as f:
                         file_names = [x.strip('\n') for x in f.readlines()]
                     
-                    for index in file_names:
-   
-                        if d == 'median':
+                    if d == 'median':
 
+                        for index in file_names:
                             if not os.path.exists( os.path.join(self.image_dir, f"median ({index}).jpg") ):
                                 raise FileNotFoundError(os.path.join(self.image_dir, f"median ({index}).jpg"))
                             
                             if not os.path.exists( os.path.join(self.image_dir, f"median ({index})_mask.jpg") ):
                                 raise FileNotFoundError(os.path.join(self.image_dir, f"median ({index})_mask.jpg") )
                             
-                            img = Image.open( os.path.join(self.image_dir, f"median ({index}).jpg") ).convert('RGB')
-                            lbl = Image.open( os.path.join(self.image_dir, f"median ({index})_mask.jpg") ).convert('L')
-
-                        elif d == 'peroneal':
-
+                            ipth = os.path.join(self.image_dir, f"median ({index}).jpg")
+                            mpth = os.path.join(self.image_dir, f"median ({index})_mask.jpg")
+                            
+                            self.nerve.append( self._read(ipth, mpth, d, r, m, index) ) 
+                    
+                    elif d == 'peroneal':
+                        
+                        for index in file_names:
                             if not os.path.exists( os.path.join(self.image_dir, f"peroneal ({index}).bmp") ):
                                 raise FileNotFoundError(os.path.join(self.image_dir, f"peroneal ({index}).bmp"))
                             
                             if not os.path.exists( os.path.join(self.image_dir, f"peroneal ({index})_mask.bmp") ):
                                 raise FileNotFoundError(os.path.join(self.image_dir, f"peroneal ({index})_mask.bmp") )
                             
-                            img = Image.open( os.path.join(self.image_dir, f"peroneal ({index}).bmp") ).convert('RGB')
-                            lbl = Image.open( os.path.join(self.image_dir, f"peroneal ({index})_mask.bmp") ).convert('L')
+                            ipth = os.path.join(self.image_dir, f"peroneal ({index}).bmp")
+                            mpth = os.path.join(self.image_dir, f"peroneal ({index})_mask.bmp")
 
-                        else:
-                            raise Exception
-                        
-                        assert( img.size == lbl.size )
-                        
-                        if self.padding:
-                            img, lbl = pad(img, lbl, self.padding_size)
-                        
-                        h, w = np.where(np.array(lbl, dtype=np.uint8) > 0)
+                            self.nerve.append( self._read(ipth, mpth, d, r, m, index) )
+                    
+                    elif d == 'ulnar':
 
-                        _nerve = {
-                            'image' : img,
-                            'mask' : lbl,
-                            'coordinates' : np.array([w.min(), h.min(), w.max()-w.min()+1, h.max()-h.min()+1], dtype=np.float32), # [W, H, Wlen, Hlen]
-                            'center' : np.array([(h.max()+h.min()) / 2, (w.max()+w.min()) / 2], dtype=np.float32), # [H x W]
-                            'height' : img.size[1],
-                            'width' : img.size[0],
-                            'category' : f'{d}/{r}/{m}', # legacy
-                            'region' : r,
-                            'modality' : m,
-                            'id' : index,
-                            'cls' : C[d][r] # New info
-                        }
-                        self.nerve.append( _nerve )                
+                        for index in file_names:
+                            for mname in os.listdir( os.path.join(self.image_dir, index, 'mask') ):
+                                fname = mname.split('_mask')[0] + mname.split('_mask')[-1]
+
+                                ipth = os.path.join(self.image_dir, index, 'image', fname)
+                                mpth = os.path.join(self.image_dir, index, 'mask', mname)
+
+                                self.nerve.append( self._read(ipth, mpth, d, r, m, index) )
+
+    def _read(self, ipth, mpth, d, r, m, index):
+        
+        if not os.path.exists( ipth ):
+            raise FileNotFoundError( ipth )
+        
+        if not os.path.exists( mpth ):
+            raise FileNotFoundError( mpth )
+        
+        img = Image.open( ipth ).convert('RGB')
+        lbl = Image.open( mpth ).convert('L')
+
+        assert( img.size == lbl.size )
+    
+        if self.padding:
+            img, lbl = pad(img, lbl, self.padding_size)
+        
+        h, w = np.where(np.array(lbl, dtype=np.uint8) > 0)
+
+        _nerve = {
+            'image' : img,
+            'mask' : lbl,
+            'coordinates' : np.array([w.min(), h.min(), w.max()-w.min()+1, h.max()-h.min()+1], dtype=np.float32), # [W, H, Wlen, Hlen]
+            'center' : np.array([(h.max()+h.min()) / 2, (w.max()+w.min()) / 2], dtype=np.float32), # [H x W]
+            'height' : img.size[1],
+            'width' : img.size[0],
+            'category' : f'{d}/{r}/{m}', # legacy
+            'region' : r,
+            'modality' : m,
+            'id' : index,
+            'cls' : C[d][r] # New info
+        }
+        
+        return _nerve                            
 
     def __getitem__(self, index):
         """

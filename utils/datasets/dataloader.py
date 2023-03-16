@@ -12,8 +12,7 @@ def get_loader(args, verbose=True) -> dict:
         if args.dataset == "BUSI_with_GT":
             test_dst = Busi(
                 dataset_pth_prefix = args.dataset_pth_prefix,
-                dataset = args.dataset,
-                category = args.category,
+                
                 testset = args.testset,
                 fold = f"v{args.kfold}/{args.k}",
                 image_set = "val",
@@ -25,7 +24,7 @@ def get_loader(args, verbose=True) -> dict:
         elif args.dataset == "Allnerve":
             test_dst = Allnerve(
                 dataset_pth_prefix = args.dataset_pth_prefix,
-                trainset = args.trainset,
+                
                 testset = args.testset,
                 fold = f"v{args.kfold}/{args.k}",
                 image_set = "val",
@@ -62,8 +61,8 @@ def get_loader(args, verbose=True) -> dict:
         if args.dataset == 'BUSI_with_GT':
             train_dst = Busi(
                 dataset_pth_prefix=args.dataset_pth_prefix,
-                dataset=args.dataset,
-                category=args.category,
+                
+                trainset = args.trainset,
                 testset=args.testset,
                 fold=f'v{args.kfold}/{args.k}',
                 image_set='train',
@@ -74,8 +73,8 @@ def get_loader(args, verbose=True) -> dict:
             )
             val_dst = Busi(
                 dataset_pth_prefix=args.dataset_pth_prefix,
-                dataset=args.dataset,
-                category=args.category,
+                
+                trainset = args.trainset,
                 testset=args.testset,
                 fold=f'v{args.kfold}/{args.k}',
                 image_set='val',

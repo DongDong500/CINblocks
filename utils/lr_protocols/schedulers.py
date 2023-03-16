@@ -7,5 +7,5 @@ def steplr(optimizer, args):
         optimizer=optimizer,
         step_size=args.step_size,
         gamma=args.gamma,
-        verbose=True
+        verbose=args.verbose
     )
