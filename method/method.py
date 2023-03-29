@@ -7,6 +7,11 @@ from .paper.UNet3Plus_CIN import UNet3Plus_CIN as _UNet3Plus_CIN
 from .paper.UNet_CIN_slim import UNet as _UNetCIN_slim
 
 
+
+from .ca.ca import UNet_ca
+
+
+
 ### U-net's base study  ###
 
 def _unet(args, n_channels=3, n_classes=2, verbose=True):
@@ -107,4 +112,25 @@ def _unet3plus_cin(args, n_channels=3, n_classes=2, verbose=True):
         n_classes=n_classes,
         emb_classes=args.emb_classes,
         CIN_affine=args.CIN_affine
+    )
+
+
+### U-net's with Adaptation Attention block & CIN    ###
+
+def unet_ca(args, n_channels=3, n_classes=2, verbose=True):
+    """For U-net with adaptation & conditional instance normalization
+    """
+    if verbose:
+        print("Load Model ")
+        print(f"\tU-net with adaptation and CIN")
+        print(f"\tEmb classes: {args.emb_classes}, PK affine: {args.CIN_affine}")
+        print(f"\tAttention: {args.no_att}, CIN: {args.no_cin}")
+    
+    return UNet_ca(
+        n_channels=n_channels,
+        n_classes=n_classes,
+        emb_classes=args.emb_classes,
+        CIN_affine=args.CIN_affine,
+        use_att=args.no_att,
+        use_cin=args.no_cin
     )

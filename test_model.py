@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
 
     test_model = [
-        '_unet_cin_slim',
+        'unet_ca',
     ]
 
     for tm in test_model:

@@ -136,84 +136,12 @@ if __name__ == "__main__":
         mode = {
             "as-a" : {
                 "model" : [
-                    '_unet_cin_slim'
+                    'unet_ca'
                 ],
                 "itr" : {
                     "shortmemo" : [
-                        '(CIN) with cin-affine BUSI / Rsz256-ElyStpLoss / benign + malignant',
-                        '(CIN) with cin-affine BUSI / Rsz256-ElyStpLoss / benign + malignant + normal'
-                    ],
-                    "trainset" : [
-                        {
-                            'BUSI_with_GT' : {
-                                'category' : ['benign', 'malignant']
-                            }
-                        },
-                        {
-                            'BUSI_with_GT' : {
-                                'category' : ['benign', 'malignant', 'normal']
-                            }
-                        },
-                    ],
-                    "testset" : [
-                        {
-                            'BUSI_with_GT' : {
-                                'category' : ['benign', 'malignant']
-                            }
-                        },
-                        {
-                            'BUSI_with_GT' : {
-                                'category' : ['benign', 'malignant', 'normal']
-                            }
-                        },
-                    ]
-                }
-            },
-            "as-b" : {
-                "model" : [
-                    '_unet_cin_slim'
-                ],
-                "itr" : {
-                    "shortmemo" : [
-                        '(CIN) without cin-affine BUSI / Rsz256-ElyStpLoss / benign + malignant',
-                        '(CIN) without cin-affine BUSI / Rsz256-ElyStpLoss / benign + malignant + normal'
-                    ],
-                    "trainset" : [
-                        {
-                            'BUSI_with_GT' : {
-                                'category' : ['benign', 'malignant']
-                            }
-                        },
-                        {
-                            'BUSI_with_GT' : {
-                                'category' : ['benign', 'malignant', 'normal']
-                            }
-                        },
-                    ],
-                    "testset" : [
-                        {
-                            'BUSI_with_GT' : {
-                                'category' : ['benign', 'malignant']
-                            }
-                        },
-                        {
-                            'BUSI_with_GT' : {
-                                'category' : ['benign', 'malignant', 'normal']
-                            }
-                        },
-                    ]
-                }
-            },
-            "pp" :{
-                "model" : [
-                    '_unet3plus_cin',
-                    '_unet2plus_cin',
-                    '_unet_cin',
-                ],
-                "itr" : {
-                    "shortmemo" : [
-                        '(CIN) without cin-affine BUSI / Rsz256-ElyStpLoss / benign + malignant',
-                        '(CIN) without cin-affine BUSI / Rsz256-ElyStpLoss / benign + malignant + normal'
+                        '(CA) with att BUSI / Rsz256-ElyStpLoss / benign + malignant',
+                        '(CA) with att BUSI / Rsz256-ElyStpLoss / benign + malignant + normal'
                     ],
                     "trainset" : [
                         {
