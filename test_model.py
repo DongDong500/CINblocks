@@ -5,6 +5,7 @@ from torchvision.models.detection import MaskRCNN_ResNet50_FPN_Weights
 
 import method
 from method.utils.custom_summary import summary
+from method.utils.modelsummary import summary as deeplab_sumy
 
 from torchinfo import summary as sumy_
 
@@ -65,12 +66,16 @@ if __name__ == "__main__":
             print(f"\t{out.size()}")
         
         try:
-            print(summary(
-                model=model,
-                input_size=inputs
-            ))
-        except:
             print(sumy_(
                 model=model,
                 input_size=(5, 3, 256, 256),
+                device='cpu'
             ))
+        except:
+            print(summary(
+                model=model,
+                input_size=inputs,
+                device='cpu'
+            ))
+        
+

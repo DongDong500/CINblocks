@@ -5,12 +5,12 @@ from .paper.UNet_CIN import UNet_CIN as _UNet_CIN
 from .paper.UNet2Plus_CIN import UNet2Plus_CIN as _UNet2Plus_CIN
 from .paper.UNet3Plus_CIN import UNet3Plus_CIN as _UNet3Plus_CIN
 from .paper.UNet_CIN_slim import UNet as _UNetCIN_slim
-
+from .paper.dUNet import Double_UNet
 
 
 from .ca.ca import UNet_ca
-
-
+from .ca.ca import CEnet_ca
+from .ca.ca import Deeplabv3plus_ca, Deeplabv3plus
 
 ### U-net's base study  ###
 
@@ -125,12 +125,88 @@ def unet_ca(args, n_channels=3, n_classes=2, verbose=True):
         print(f"\tU-net with adaptation and CIN")
         print(f"\tEmb classes: {args.emb_classes}, PK affine: {args.CIN_affine}")
         print(f"\tAttention: {args.no_att}, CIN: {args.no_cin}")
-    
+        print(f"\tReduction ratio: {args.reduction_ratio}")
+
     return UNet_ca(
         n_channels=n_channels,
         n_classes=n_classes,
         emb_classes=args.emb_classes,
         CIN_affine=args.CIN_affine,
+        reduction_ratio=args.reduction_ratio,
         use_att=args.no_att,
-        use_cin=args.no_cin
+        use_cin=args.no_cin,
+    )
+
+def cenet_ca(args, n_channels=3, n_classes=2, verbose=True):
+    """For CE-Net with adaptation & conditional instance normalization
+    """
+    if verbose:
+        print("Load Model ")
+        print(f"\tCE-Net with adaptation and CIN")
+        print(f"\tEmb classes: {args.emb_classes}, PK affine: {args.CIN_affine}")
+        print(f"\tAttention: {args.no_att}, CIN: {args.no_cin}")
+        print(f"\tReduction ratio: {args.reduction_ratio}")
+
+    return CEnet_ca(
+        n_channels=n_channels,
+        n_classes=n_classes,
+        emb_classes=args.emb_classes,
+        CIN_affine=args.CIN_affine,
+        reduction_ratio=args.reduction_ratio,
+        use_att=args.no_att,
+        use_cin=args.no_cin,
+    )
+
+def deeplabv3plus_ca(args, n_channels=3, n_classes=2, verbose=True):
+    """For Deeplabv3+ with adaptation & conditional instance normalization
+    """
+    if verbose:
+        print("Load Model ")
+        print(f"\tDeeplabv3+ (backbone resnet101) with adaptation and CIN")
+        print(f"\tEmb classes: {args.emb_classes}, PK affine: {args.CIN_affine}")
+        print(f"\tAttention: {args.no_att}, CIN: {args.no_cin}")
+        print(f"\tReduction ratio: {args.reduction_ratio}")
+
+    return Deeplabv3plus_ca(
+        n_channels=n_channels,
+        n_classes=n_classes,
+        emb_classes=args.emb_classes,
+        CIN_affine=args.CIN_affine,
+        reduction_ratio=args.reduction_ratio,
+        use_att=args.no_att,
+        use_cin=args.no_cin,
+    )
+
+def deeplabv3plus(args, n_channels=3, n_classes=2, verbose=True):
+    """For Deeplabv3+ with adaptation & conditional instance normalization
+    """
+    if verbose:
+        print("Load Model ")
+        print(f"\tDeeplabv3+ (backbone resnet101)")
+        print(f"\tEmb classes: {args.emb_classes}, PK affine: {args.CIN_affine}")
+        print(f"\tAttention: {args.no_att}, CIN: {args.no_cin}")
+        print(f"\tReduction ratio: {args.reduction_ratio}")
+
+    return Deeplabv3plus(
+        n_channels=n_channels,
+        n_classes=n_classes,
+        emb_classes=args.emb_classes,
+        CIN_affine=args.CIN_affine,
+        reduction_ratio=args.reduction_ratio,
+        use_att=args.no_att,
+        use_cin=args.no_cin,
+    )
+
+### Double U-net ###
+
+def double_unet(args, n_channels=3, n_classes=2, verbose=True):
+    """Double U-net
+    """
+    if verbose:
+        print("Load Model ")
+        print(f"\tDouble U-net")
+        
+    return Double_UNet(
+        n_channels=n_channels,
+        n_classes=n_classes
     )

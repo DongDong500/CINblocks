@@ -6,6 +6,8 @@ import torch.nn as nn
 
 
 from .unet.unet import UNet
+from .cenet.cenet import CE_Net_
+from .deeplabv3plus.modeling import deeplabv3plus_resnet101
 
 
 from .cbam import CBAM
@@ -243,16 +245,28 @@ class ConAdapt(nn.Module):
 
 
         # downsampling
-        self.conv1 = unetConv2_cin(self.n_channels, filters[0], self.is_batchnorm, emb_classes=self.emb_classes, CIN_affine=self.CIN_affine)
+        if self.use_cin:
+            self.conv1 = unetConv2_cin(self.n_channels, filters[0], self.is_batchnorm, emb_classes=self.emb_classes, CIN_affine=self.CIN_affine)
+        else:
+            self.conv1 = unetConv2(self.n_channels, filters[0], self.is_batchnorm)
         self.maxpool1 = nn.MaxPool2d(kernel_size=2)
 
-        self.conv2 = unetConv2_cin(filters[0], filters[1], self.is_batchnorm, emb_classes=self.emb_classes, CIN_affine=self.CIN_affine)
+        if self.use_cin:
+            self.conv2 = unetConv2_cin(filters[0], filters[1], self.is_batchnorm, emb_classes=self.emb_classes, CIN_affine=self.CIN_affine)
+        else:
+            self.conv2 = unetConv2(filters[0], filters[1], self.is_batchnorm)
         self.maxpool2 = nn.MaxPool2d(kernel_size=2)
 
-        self.conv3 = unetConv2_cin(filters[1], filters[2], self.is_batchnorm, emb_classes=self.emb_classes, CIN_affine=self.CIN_affine)
+        if self.use_cin:
+            self.conv3 = unetConv2_cin(filters[1], filters[2], self.is_batchnorm, emb_classes=self.emb_classes, CIN_affine=self.CIN_affine)
+        else:
+            self.conv3 = unetConv2(filters[1], filters[2], self.is_batchnorm)
         self.maxpool3 = nn.MaxPool2d(kernel_size=2)
 
-        self.conv4 = unetConv2_cin(filters[2], filters[3], self.is_batchnorm, emb_classes=self.emb_classes, CIN_affine=self.CIN_affine)
+        if self.use_cin:
+            self.conv4 = unetConv2_cin(filters[2], filters[3], self.is_batchnorm, emb_classes=self.emb_classes, CIN_affine=self.CIN_affine)
+        else:
+            self.conv4 = unetConv2(filters[2], filters[3], self.is_batchnorm)
         self.maxpool4 = nn.MaxPool2d(kernel_size=2)
 
         self.center = unetConv2(filters[3], filters[4], self.is_batchnorm)
@@ -351,17 +365,14 @@ class UNet_ca(nn.Module):
         
         super().__init__()
 
-        self.num_layer = num_layer
-        self.use_att = use_att
-        self.use_cin = use_cin
-
         self.pt = UNet(n_channels=n_channels, n_classes=n_classes, bilinear=bilinear, feature_scale=feature_scale, 
                  is_deconv=is_deconv, is_batchnorm=is_batchnorm)
         
         self.conadapt = ConAdapt(n_channels=n_classes, n_classes=n_classes, bilinear=bilinear, feature_scale=feature_scale, 
                  is_deconv=is_deconv, is_batchnorm=is_batchnorm,
                  emb_classes=emb_classes, CIN_affine=CIN_affine,
-                 reduction_ratio=reduction_ratio, pool_types=pool_types, no_spatial=no_spatial)
+                 reduction_ratio=reduction_ratio, pool_types=pool_types, no_spatial=no_spatial,
+                 use_att=use_att, use_cin=use_cin)
         
         # for i in range(1, num_layer + 1):
         #     cbam = CBAM(gate_channels=n_classes, reduction_ratio=reduction_ratio, pool_types=pool_types, no_spatial=no_spatial)
@@ -388,6 +399,100 @@ class UNet_ca(nn.Module):
         #     if self.use_cin:
         #         cin = getattr(self, 'cin%d' % i)
         #         out = cin(out, y)
+
+        return {
+            'image' : out
+        }
+    
+class CEnet_ca(nn.Module):
+
+    def __init__(self, n_channels=3, n_classes=2, 
+                 bilinear=True, feature_scale=4, 
+                 is_deconv=True, is_batchnorm=True, 
+                 gate_channels=2, reduction_ratio=16, pool_types=['avg', 'max'], no_spatial=False,
+                 num_layer = 6,
+                 emb_classes=2,
+                 CIN_affine=True,
+                 mid_channels=None,
+                 use_att=True,
+                 use_cin=True) -> None:
+        super().__init__()
+
+        self.pt = CE_Net_(num_classes=n_classes, )
+        self.conadapt = ConAdapt(n_channels=n_classes, n_classes=n_classes, bilinear=bilinear, feature_scale=feature_scale, 
+                 is_deconv=is_deconv, is_batchnorm=is_batchnorm,
+                 emb_classes=emb_classes, CIN_affine=CIN_affine,
+                 reduction_ratio=reduction_ratio, pool_types=pool_types, no_spatial=no_spatial,
+                 use_att=use_att, use_cin=use_cin)
+
+    def forward(self, input):
+
+        x = input['image']
+        y = input['cls']
+
+        out = self.pt(x)
+        out = self.conadapt(out, y)
+
+        return {
+            'image' : out
+        }
+
+class Deeplabv3plus_ca(nn.Module):
+
+    def __init__(self, n_channels=3, n_classes=2, 
+                 bilinear=True, feature_scale=4, 
+                 is_deconv=True, is_batchnorm=True, 
+                 gate_channels=2, reduction_ratio=16, pool_types=['avg', 'max'], no_spatial=False,
+                 num_layer = 6,
+                 emb_classes=2,
+                 CIN_affine=True,
+                 mid_channels=None,
+                 use_att=True,
+                 use_cin=True) -> None:
+        super().__init__()
+
+        self.pt = deeplabv3plus_resnet101(num_classes=n_classes, )
+
+        self.conadapt = ConAdapt(n_channels=n_classes, n_classes=n_classes, bilinear=bilinear, feature_scale=feature_scale, 
+                 is_deconv=is_deconv, is_batchnorm=is_batchnorm,
+                 emb_classes=emb_classes, CIN_affine=CIN_affine,
+                 reduction_ratio=reduction_ratio, pool_types=pool_types, no_spatial=no_spatial,
+                 use_att=use_att, use_cin=use_cin)
+
+    def forward(self, input):
+
+        x = input['image']
+        y = input['cls']
+
+        out = self.pt(x)
+        out = self.conadapt(out, y)
+
+        return {
+            'image' : out
+        }
+    
+class Deeplabv3plus(nn.Module):
+
+    def __init__(self, n_channels=3, n_classes=2, 
+                 bilinear=True, feature_scale=4, 
+                 is_deconv=True, is_batchnorm=True, 
+                 gate_channels=2, reduction_ratio=16, pool_types=['avg', 'max'], no_spatial=False,
+                 num_layer = 6,
+                 emb_classes=2,
+                 CIN_affine=True,
+                 mid_channels=None,
+                 use_att=True,
+                 use_cin=True) -> None:
+        super().__init__()
+
+        self.pt = deeplabv3plus_resnet101(num_classes=n_classes, )
+
+    def forward(self, input):
+
+        x = input['image']
+        y = input['cls']
+
+        out = self.pt(x)
 
         return {
             'image' : out

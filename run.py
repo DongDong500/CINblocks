@@ -136,12 +136,13 @@ if __name__ == "__main__":
         mode = {
             "as-a" : {
                 "model" : [
-                    'unet_ca'
+                    'deeplabv3plus',
+                    'deeplabv3plus_ca'
                 ],
                 "itr" : {
                     "shortmemo" : [
-                        '(CA) with att BUSI / Rsz256-ElyStpLoss / benign + malignant',
-                        '(CA) with att BUSI / Rsz256-ElyStpLoss / benign + malignant + normal'
+                        '(deeplabv3+) BUSI / Rsz256-ElyStpLoss / benign + malignant',
+                        '(deeplabv3+) BUSI / Rsz256-ElyStpLoss / benign + malignant + normal'
                     ],
                     "trainset" : [
                         {

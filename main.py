@@ -138,6 +138,10 @@ def get_argparser():
     # Model [...]
     parser.add_argument("--model", type=str, default="_unet", choices=available_models,
                         help="Model name (default: _unet)")
+    
+    # Model [Conditional Adaptation]
+    parser.add_argument("--reduction_ratio", type=int, default=16,
+                        help="")
     parser.add_argument("--no_att", action='store_false', 
                         help="")
     parser.add_argument("--no_cin", action='store_false',
