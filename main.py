@@ -279,7 +279,6 @@ def run(args, RUN, FOLD) -> dict:
         args=args
     )
 
-    
     # Train/Validate
     start_time = datetime.datetime.now()
     bscore = {}
@@ -290,14 +289,17 @@ def run(args, RUN, FOLD) -> dict:
         metrics.reset()
         running_loss = 0.0
 
-        for i, sample in tqdm(
+        pbar = tqdm(
             enumerate(loader["train"]), 
             total=len(loader["train"]),
-            desc="Train",
+            desc=f"Train {epoch}/{args.total_itrs}",
             ncols=70,
             ascii=" =",
-            leave=False
-        ):
+            leave=False)
+        
+        for i, sample in pbar:
+            pbar.set_description(f"Train {epoch}/{args.total_itrs}")
+
             optimizer.zero_grad()
 
             for k, v in sample.items():
@@ -345,14 +347,16 @@ def run(args, RUN, FOLD) -> dict:
         metrics.reset()
         running_loss = 0.0
 
-        with torch.no_grad():
-            for i, sample in tqdm(
+        pbar = tqdm(
                 enumerate(loader["val"]), total=len(loader["val"]), 
-                desc="Test",
+                desc=f"Test {epoch}/{args.total_itrs}",
                 ncols=70,
                 ascii=" =",
-                leave=False
-            ):
+                leave=False)
+        
+        with torch.no_grad():
+            for i, sample in pbar:
+                pbar.set_description(f"Test {epoch}/{args.total_itrs}")
                 
                 for k, v in sample.items():
                     sample[k] = sample[k].to(devices)

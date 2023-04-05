@@ -7,7 +7,7 @@ import torch.nn as nn
 
 from .unet.unet import UNet
 from .cenet.cenet import CE_Net_
-from .deeplabv3plus.modeling import deeplabv3plus_resnet101
+from .deeplabv3plus.modeling import deeplabv3plus_resnet101, deeplabv3plus_resnet50
 
 
 from .cbam import CBAM
@@ -471,7 +471,7 @@ class Deeplabv3plus_ca(nn.Module):
             'image' : out
         }
     
-class Deeplabv3plus(nn.Module):
+class Deeplabv3plus_resnet101(nn.Module):
 
     def __init__(self, n_channels=3, n_classes=2, 
                  bilinear=True, feature_scale=4, 
@@ -482,10 +482,41 @@ class Deeplabv3plus(nn.Module):
                  CIN_affine=True,
                  mid_channels=None,
                  use_att=True,
-                 use_cin=True) -> None:
+                 use_cin=True,
+                 output_stride=8,
+                 pretrained_backbone=True) -> None:
         super().__init__()
 
-        self.pt = deeplabv3plus_resnet101(num_classes=n_classes, )
+        self.pt = deeplabv3plus_resnet101(num_classes=n_classes, output_stride=output_stride, pretrained_backbone=pretrained_backbone)
+
+    def forward(self, input):
+
+        x = input['image']
+        y = input['cls']
+
+        out = self.pt(x)
+
+        return {
+            'image' : out
+        }
+
+class Deeplabv3plus_resnet50(nn.Module):
+
+    def __init__(self, n_channels=3, n_classes=2, 
+                 bilinear=True, feature_scale=4, 
+                 is_deconv=True, is_batchnorm=True, 
+                 gate_channels=2, reduction_ratio=16, pool_types=['avg', 'max'], no_spatial=False,
+                 num_layer = 6,
+                 emb_classes=2,
+                 CIN_affine=True,
+                 mid_channels=None,
+                 use_att=True,
+                 use_cin=True,
+                 output_stride=8,
+                 pretrained_backbone=True) -> None:
+        super().__init__()
+
+        self.pt = deeplabv3plus_resnet50(num_classes=n_classes, output_stride=output_stride, pretrained_backbone=pretrained_backbone)
 
     def forward(self, input):
 

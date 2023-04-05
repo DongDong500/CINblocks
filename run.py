@@ -136,8 +136,7 @@ if __name__ == "__main__":
         mode = {
             "as-a" : {
                 "model" : [
-                    'deeplabv3plus',
-                    'deeplabv3plus_ca'
+                    'deeplabv3plus_resnet50',
                 ],
                 "itr" : {
                     "shortmemo" : [

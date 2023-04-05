@@ -10,7 +10,7 @@ from .paper.dUNet import Double_UNet
 
 from .ca.ca import UNet_ca
 from .ca.ca import CEnet_ca
-from .ca.ca import Deeplabv3plus_ca, Deeplabv3plus
+from .ca.ca import Deeplabv3plus_ca, Deeplabv3plus_resnet101, Deeplabv3plus_resnet50
 
 ### U-net's base study  ###
 
@@ -177,26 +177,6 @@ def deeplabv3plus_ca(args, n_channels=3, n_classes=2, verbose=True):
         use_cin=args.no_cin,
     )
 
-def deeplabv3plus(args, n_channels=3, n_classes=2, verbose=True):
-    """For Deeplabv3+ with adaptation & conditional instance normalization
-    """
-    if verbose:
-        print("Load Model ")
-        print(f"\tDeeplabv3+ (backbone resnet101)")
-        print(f"\tEmb classes: {args.emb_classes}, PK affine: {args.CIN_affine}")
-        print(f"\tAttention: {args.no_att}, CIN: {args.no_cin}")
-        print(f"\tReduction ratio: {args.reduction_ratio}")
-
-    return Deeplabv3plus(
-        n_channels=n_channels,
-        n_classes=n_classes,
-        emb_classes=args.emb_classes,
-        CIN_affine=args.CIN_affine,
-        reduction_ratio=args.reduction_ratio,
-        use_att=args.no_att,
-        use_cin=args.no_cin,
-    )
-
 ### Double U-net ###
 
 def double_unet(args, n_channels=3, n_classes=2, verbose=True):
@@ -209,4 +189,46 @@ def double_unet(args, n_channels=3, n_classes=2, verbose=True):
     return Double_UNet(
         n_channels=n_channels,
         n_classes=n_classes
+    )
+
+### Base models ###
+
+def deeplabv3plus_resnet101(args, n_channels=3, n_classes=2, verbose=True):
+    """For base Deeplabv3+ resnet101 
+    """
+    if verbose:
+        print("Load Model ")
+        print(f"\tDeeplabv3+ (backbone resnet101)")
+        print(f"\toutput stride: 8, pretrained backbone: True")
+
+    return Deeplabv3plus_resnet101(
+        n_channels=n_channels,
+        n_classes=n_classes,
+        emb_classes=args.emb_classes,
+        CIN_affine=args.CIN_affine,
+        reduction_ratio=args.reduction_ratio,
+        use_att=args.no_att,
+        use_cin=args.no_cin,
+        output_stride=8,
+        pretrained_backbone=True
+    )
+
+def deeplabv3plus_resnet50(args, n_channels=3, n_classes=2, verbose=True):
+    """For base Deeplabv3+ resnet50
+    """
+    if verbose:
+        print("Load Model ")
+        print(f"\tDeeplabv3+ (backbone resnet50)")
+        print(f"\toutput stride: 8, pretrained backbone: True")
+
+    return Deeplabv3plus_resnet50(
+        n_channels=n_channels,
+        n_classes=n_classes,
+        emb_classes=args.emb_classes,
+        CIN_affine=args.CIN_affine,
+        reduction_ratio=args.reduction_ratio,
+        use_att=args.no_att,
+        use_cin=args.no_cin,
+        output_stride=8,
+        pretrained_backbone=True
     )
